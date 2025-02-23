@@ -13,7 +13,7 @@ The app is **containerized with Docker** and **deployed on AWS EC2** using **Git
 
 ---
 
-## ⚡ Tech Stack
+## ⚡ Tech Stacks
 - **Backend**: FastAPI (Python)
 - **Database**: SQLite (or PostgreSQL)
 - **Containerization**: Docker
