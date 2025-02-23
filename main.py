@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, WebSocket
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import sqlite3
 
 app = FastAPI()
@@ -20,10 +20,11 @@ conn.commit()
 
 # Pydantic Model for Orders
 class Order(BaseModel):
-    symbol: str
-    price: float
-    quantity: int
-    order_type: str
+    symbol: str = Field(..., min_length=1, max_length=5, pattern="^[A-Z]+$")
+    price: float = Field(..., gt=0)  # Price must be greater than 0
+    quantity: int = Field(..., gt=0) # Quantity must be greater than 0
+    order_type: str = Field(..., pattern="^(buy|sell)$")  # Only "buy" or "sell"
+
 
 # WebSocket connections
 active_connections = set()
