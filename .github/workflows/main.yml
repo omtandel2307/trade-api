@@ -10,8 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Ensures full git history for `git pull`
 
     - name: Deploy to EC2
       uses: appleboy/ssh-action@master
@@ -22,7 +24,17 @@ jobs:
         script: |
           cd ~/trade-api
           git pull origin main
+          
+          # Stop and remove any existing containers
           docker stop trade-api || true
           docker rm trade-api || true
+          
+          # Remove old images to free space
+          docker rmi trade-api || true
+          
+          # Build and run the new container
           docker build -t trade-api .
           docker run -d -p 8000:8000 trade-api
+          
+          # Show running containers
+          docker ps
