@@ -6,35 +6,49 @@ on:
       - master
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest  # Install pytest
+
+      - name: Run Tests
+        run: pytest test_main.py  # Run pytest
+
   deploy:
+    needs: test  # Deploy only if tests pass
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0  # Ensures full git history for `git pull`
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          cd ~/trade-api
-          git pull origin main
-          
-          # Stop and remove any existing containers
-          docker stop trade-api || true
-          docker rm trade-api || true
-          
-          # Remove old images to free space
-          docker rmi trade-api || true
-          
-          # Build and run the new container
-          docker build -t trade-api .
-          docker run -d -p 8000:8000 trade-api
-          
-          # Show running containers
-          docker ps
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/trade-api
+            git pull origin master
+            
+            docker stop trade-api || true
+            docker rm trade-api || true
+            docker rmi trade-api || true
+            
+            docker build -t trade-api .
+            docker run -d -p 8000:8000 trade-api
+            
+            docker ps
